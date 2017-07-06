@@ -1,10 +1,6 @@
 --Made by purerosefallen
+
 os=require('os')
-Debug.SetAIName("Matching Game")
-Debug.ReloadFieldBegin(DUEL_ATTACK_FIRST_TURN+DUEL_SIMPLE_AI)
-Debug.SetPlayerInfo(0,8000,0,0)
-Debug.SetPlayerInfo(1,8000,0,0)
-Debug.ReloadFieldEnd()
 
 CardList={
 	29088922,
@@ -14,19 +10,32 @@ CardList={
 	55586621,
 }
 
-DIRECTION_UP    =0x1
-DIRECTION_DOWN  =0x2
-DIRECTION_LEFT  =0x4
-DIRECTION_RIGHT =0x8
-DIRECTION_ALL   =0xf
+DIRECTION_UP		=0x1
+DIRECTION_DOWN  	=0x2
+DIRECTION_LEFT  	=0x4
+DIRECTION_RIGHT 	=0x8
+DIRECTION_ALL   	=0xf
 DIRECTION_UP_LEFT   =0x10
 DIRECTION_UP_RIGHT  =0x20
 DIRECTION_DOWN_LEFT =0x40
 DIRECTION_DOWN_RIGHT=0x80
-MAX_DM          =0
-START_LP        =8000
-PLAY_TIME       =0
-SHOW_HINT_TIME  =0
+MAX_DM				=0
+START_LP			=8000
+PLAY_TIME			=0
+SHOW_HINT_TIME		=0
+
+Debug.SetAIName("Matching Game")
+Debug.ReloadFieldBegin(DUEL_ATTACK_FIRST_TURN+DUEL_SIMPLE_AI)
+Debug.SetPlayerInfo(0,8000,0,0)
+Debug.SetPlayerInfo(1,8000,0,0)
+for i=1,20 do
+	local loc=LOCATION_GRAVE
+	if i>10 then loc=LOCATION_REMOVED end
+	for _,code in ipairs(CardList) do
+		Debug.AddCard(code,0,0,loc,0,POS_FACEUP_ATTACK,true)
+	end
+end
+Debug.ReloadFieldEnd()
 
 function Group.MergeCard(g,p,loc,seq)
 	local tc=Duel.GetFieldCard(p,loc,seq)
@@ -115,7 +124,7 @@ function Card.GetDirectionGroup(c,direction)
 	return g
 end
 function Card.IsCanMoveDownwards(c)
-	return c:GetDirectionGroup(DIRECTION_DOWN):GetCount()==0
+	return c:GetDirectionGroup(DIRECTION_DOWN):GetCount()==0 and (c:IsLocation(LOCATION_MZONE) or c:IsControler(1))
 end
 function Card.SetItemHint(c)
 	local code = c:GetFlagEffectLabel(10000002)
@@ -135,7 +144,7 @@ function Card.MoveDownwards(c)
 		Duel.MoveToField(c,1,cp,LOCATION_SZONE,POS_FACEUP_ATTACK,true)
 		Duel.MoveSequence(c,seq)
 	end
-	Card.SetItemHint(c)
+	c:SetItemHint()
 end
 function Card.GetChangedCode(c)
 	return c:GetFlagEffectLabel(10000000) or c:GetCode()
@@ -223,7 +232,7 @@ function Duel.AddItem(item_type)
 		local code=list[math.random(#list)]
 		-- invisible
 		tc:RegisterFlagEffect(10000002,0,EFFECT_FLAG_ABSOLUTE_TARGET,0,code,aux.Stringid(code,0))
-		Card.SetItemHint(tc)
+		tc:SetItemHint()
 	end
 end
 function Duel.CheckScore(ct1,ct2,mul)
@@ -286,8 +295,8 @@ function Group.Exchange(g)
 	Duel.MoveSequence(c2,seq1)
 	Duel.MoveToField(c1,1,cp2,loc2,POS_FACEUP_ATTACK,true)
 	Duel.MoveSequence(c1,seq2)
-	Card.SetItemHint(c1)
-	Card.SetItemHint(c2)
+	c1:SetItemHint()
+	c2:SetItemHint()
 end
 
 function Duel.ReloadField()
@@ -338,7 +347,6 @@ function Duel.StartGame()
 				tc:ResetFlagEffect(10000002)
 			end
 			Duel.SendtoGrave(g,REASON_RULE)
-			--Duel.Remove(g,POS_FACEUP,REASON_RULE)
 			Duel.ReloadField()
 			Duel.RefreshField()
 			if Duel.GetLP(1) <= 0 then
@@ -360,7 +368,7 @@ function Duel.StartGame()
 			end
 			local tc=sg:GetFirst()
 			if SHOW_HINT_TIME>0 then
-				local g2=tc:GetDirectionGroup(DIRECTION_ALL):FilterSelect(0,Card.IsCanBeSelected,1,1,nil)
+				local g2=tc:GetDirectionGroup(DIRECTION_ALL):FilterSelect(0,Card.IsExchangable,1,1,nil,tc)
 				sg:Merge(g2)
 			else
 				local g2=tc:GetDirectionGroup(DIRECTION_ALL):Select(0,1,1,nil)
@@ -393,9 +401,6 @@ function Item.StrikeFilter(c,ec)
 	else
 		return c:GetSequence()+ec:GetSequence()==4
 	end
-end
-function Item.PaintFilter(c,code)
-	return not c:IsCode(code) and c:IsNotAlreadyToGrave()
 end
 function Item.LightingFilter(c,code)
 	return c:IsCode(code) and c:IsNotAlreadyToGrave()
