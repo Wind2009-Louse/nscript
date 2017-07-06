@@ -23,6 +23,7 @@ MAX_DM				=0
 START_LP			=8000
 PLAY_TIME			=0
 SHOW_HINT_TIME		=0
+SCORE_ADD_TIME		=0
 
 Debug.SetAIName("Matching Game")
 Debug.ReloadFieldBegin(DUEL_ATTACK_FIRST_TURN+DUEL_SIMPLE_AI)
@@ -244,6 +245,12 @@ function Duel.CheckScore(ct1,ct2,mul)
 	local score1=150*(ct1-2)*mul
 	local score2=100*(ct1+mul-3)
 	local score3=ct2*50
+	if SCORE_ADD_TIME > 0 then
+		SCORE_ADD_TIME = SCORE_ADD_TIME - 1
+		score1 = score1 * 2
+		score2 = score2 * 2
+		score3 = score3 * 2
+	end
 	MAX_DM = math.max(score1,MAX_DM)
 	MAX_DM = math.max(score3,MAX_DM)
 	Duel.Damage(1,score1,REASON_RULE)
@@ -381,7 +388,7 @@ function Duel.StartGame()
 			end
 			local t2=os.clock()
 			if Duel.CalculateTime(t1,t2) then return end
-		until sg:IsFitToExchange()	  
+		until sg:IsFitToExchange()  
 		sg:Exchange()
 	end
 end
@@ -397,6 +404,7 @@ Item.List={
 	[2]={
 		72403299,
 		86361354,
+		23171610,
 	},
 }
 function Item.StrikeFilter(c,ec)
@@ -428,6 +436,9 @@ end,
 end,
 [86361354]=function(c)
 	return Duel.GetMatchingGroup(Item.LightingFilter,0,LOCATION_ONFIELD,LOCATION_ONFIELD,c,c:GetCode())
+end,
+[23171610]=function(c)
+	SCORE_ADD_TIME=SCORE_ADD_TIME+10
 end,
 }
 
