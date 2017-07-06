@@ -369,6 +369,7 @@ function Duel.StartGame()
 		end
 		local sg=Group.CreateGroup()
 		repeat
+			local rs = true
 			sg:Clear()
 			local t1=os.clock()
 			if SHOW_HINT_TIME>0 then
@@ -380,15 +381,21 @@ function Duel.StartGame()
 			end
 			local tc=sg:GetFirst()
 			if SHOW_HINT_TIME>0 then
-				local g2=tc:GetDirectionGroup(DIRECTION_ALL):FilterSelect(0,Card.IsExchangable,1,1,nil,tc)
+				local g=tc:GetDirectionGroup(DIRECTION_ALL):Filter(Card.IsExchangable,nil,tc)
+				g:AddCard(tc)
+				local g2=g:Select(0,1,1,nil)
 				sg:Merge(g2)
+				if g2:GetFirst() == tc then rs = false end
 			else
-				local g2=tc:GetDirectionGroup(DIRECTION_ALL):Select(0,1,1,nil)
+				local g=tc:GetDirectionGroup(DIRECTION_ALL)
+				g:AddCard(tc)
+				local g2=g:Select(0,1,1,nil)
 				sg:Merge(g2)
+				if g2:GetFirst() == tc then rs = false end
 			end
 			local t2=os.clock()
 			if Duel.CalculateTime(t1,t2) then return end
-		until sg:IsFitToExchange()  
+		until (rs and sg:IsFitToExchange())
 		sg:Exchange()
 	end
 end
