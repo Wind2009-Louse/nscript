@@ -266,9 +266,9 @@ function Duel.CheckScore(ct1,ct2,mul)
 	end
 	MAX_DM = math.max(score1,MAX_DM)
 	MAX_DM = math.max(score3,MAX_DM)
-	Duel.Damage(1,score1,REASON_RULE)
+	Duel.SetLP(0,Duel.GetLP(0)+score2)
 	Duel.Damage(1,score3,REASON_RULE)
-	Duel.Recover(0,score2,REASON_RULE)
+	Duel.Damage(1,score1,REASON_RULE)
 	if mul==1 and ct1>5 then
 		Duel.AddItem(2)
 	elseif mul==1 and ct1>3 then
